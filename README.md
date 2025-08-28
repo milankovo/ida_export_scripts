@@ -1,4 +1,5 @@
 # Export Git Plugin for IDA Pro
+![logo](logo.jpg)
 
 ## Overview
 The Export Git plugin for IDA Pro enables the seamless export of script snippets to a Git repository, ensuring your work is automatically backed up and version-controlled.
