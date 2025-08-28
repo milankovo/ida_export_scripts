@@ -1,0 +1,15 @@
+{
+    "IDAMetadataDescriptorVersion": 1,
+    "plugin": {
+        "name": "export_to_git",
+        "entryPoint": "export_to_git.py",
+        "categories": [
+            "api-scripting-and-automation",
+            "collaboration-and-productivity"
+        ],
+        "description": "Exports IDA scripts to a Git repository",
+        "idaVersions": ">=7.0",
+        "logoPath": "logo.jpg",
+        "version": "1.0.0"
+    }
+}
