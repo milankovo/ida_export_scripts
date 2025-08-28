@@ -129,8 +129,7 @@ class DatabaseClosedHook(idaapi.IDP_Hooks):
         super().__init__()
 
     def closebase(self):
-        # Handle database closed event
-        pass
+        commit_files_to_git()
 
 
 class ExportsPlugin(idaapi.plugin_t):
@@ -169,3 +168,4 @@ class ExportsPlugin(idaapi.plugin_t):
 
 def PLUGIN_ENTRY():
     return ExportsPlugin()
+
