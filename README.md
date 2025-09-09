@@ -1,4 +1,5 @@
 # Scripts to Git Plugin for IDA Pro
+
 ![logo](logo.jpg)
 
 ## Overview
@@ -13,7 +14,7 @@ The Scripts to Git plugin for IDA Pro enables the seamless export of script snip
 The plugin automatically exports all your script snippets to a Git repository when you close your IDA Pro project (saving is not required).
 
 ## Configuration
-- The plugin requires a Git repository to be initialized in the specified export directory. Users must set this up before using the plugin.
+- The plugin requires an existing folder to export scripts to. It will try initializing a new Git repository in this folder if it doesn't already exist.
 - To customize the Git repository path, edit the list inside the `find_existing_script_directory` function in the `export_to_git.py` file. You can specify multiple paths, and the plugin will use the first existing folder it finds. By default, the path is set to `~/Documents/ida scripts`.
 
 ## Requirements

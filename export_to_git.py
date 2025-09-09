@@ -1,11 +1,15 @@
-import os
 import idaapi
 import idc
 from dataclasses import dataclass
 from typing import List
+from pathlib import Path
+import logging
 
 # todo: track script renames
 # pip install gitpython
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("export_to_git")
 
 
 @dataclass
@@ -57,59 +61,90 @@ def get_scripts() -> List[Script]:
     return scripts
 
 
-def submit_to_repo(path, commit_name):
-    from git import Repo
+def submit_to_repo(
+    path: Path, commit_name: str, expected_number_of_changes: int
+) -> int:
+    from git import Repo, InvalidGitRepositoryError, BadName
 
-    repo = Repo(path)
-    repo.index.add(["*repository*"])
-    dif = repo.index.diff("HEAD")
-    if len(dif) > 0:
+    try:
+        repo = Repo(path)
+    except InvalidGitRepositoryError as e:
+        logger.info(f"Initializing new git repository in {path}")
+        repo = Repo.init(path, mkdir=True)
+
+    repo.index.add(items=["*repository*"])
+
+    changes = 0
+    try:
+        dif = repo.index.diff("HEAD")
+        changes = len(dif)
+    except BadName:
+        changes = expected_number_of_changes
+
+    if changes > 0:
         repo.index.commit(commit_name)
-    return len(dif)
+    if changes != expected_number_of_changes:
+        logger.warning(
+            f"Expected {expected_number_of_changes} changes, but found {changes}."
+        )
+    return changes
 
 
-def export_all(path):
+def censor_homedir(path: str) -> str:
+    home_path = Path.home().resolve()
+    return path.replace(str(home_path), "~")
+
+
+def export_all(path: Path):
     scripts = get_scripts()
     if len(scripts) == 0:
-        print("nothing to export")
+        logger.debug("nothing to export")
         return 0
 
-    repo_path = os.path.join(path, "repository")
-    project_path = os.path.join(repo_path, idaapi.retrieve_input_file_sha256().hex())
+    repo_path = path / "repository"
+    project_path = repo_path / idaapi.retrieve_input_file_sha256().hex()
 
-    if not os.path.isdir(project_path):
-        os.mkdir(project_path)
+    project_path.mkdir(parents=True, exist_ok=True)
 
+    number_of_changes = 0
     for script in scripts:
         fname = f"{slugify(script.name)}.{script.ext}"
-        full_path = os.path.join(project_path, fname)
+        full_path = project_path / fname
 
-        if os.path.exists(full_path):
-            with open(full_path, "r") as f:
-                old = f.read()
+        if full_path.exists():
+            old = full_path.read_text()
             if old == script.content:
                 continue
-        with open(full_path, "w") as f:
-            f.write(script.content)
+        number_of_changes += 1
+        full_path.write_text(script.content)
 
-    commit_name = f"idb: {idc.get_idb_path()}\nsha256: {idaapi.retrieve_input_file_sha256().hex()}"
-    return submit_to_repo(path, commit_name)
+    idb_path = censor_homedir(idc.get_idb_path())
+
+    commit_name = (
+        f"idb: {idb_path}\nsha256: {idaapi.retrieve_input_file_sha256().hex()}"
+    )
+    return submit_to_repo(
+        path=path, commit_name=commit_name, expected_number_of_changes=number_of_changes
+    )
 
 
 def find_existing_script_directory():
-    paths = [os.path.expanduser("~/Documents/ida scripts")]
+    paths = [Path.home() / "Documents" / "ida scripts"]
     for path in paths:
-        if os.path.exists(path):
+        if path.exists():
             return path
 
 
 def commit_files_to_git():
     path = find_existing_script_directory()
     if not path:
-        print("No script directory found")
+        logger.error("No script directory found")
         return
     changed_count = export_all(path)
-    print(f"commited {changed_count} file{'s' if changed_count != 1 else ''}")
+    if changed_count > 0:
+        logger.info(
+            f"commited {changed_count} file{'s' if changed_count != 1 else ''} to {path}"
+        )
 
 
 class export_scripts_handler_t(idaapi.action_handler_t):
@@ -124,7 +159,7 @@ class export_scripts_handler_t(idaapi.action_handler_t):
         return idaapi.AST_ENABLE_ALWAYS
 
 
-class DatabaseClosedHook(idaapi.IDP_Hooks):
+class DatabaseClosedHook(idaapi.IDB_Hooks):
     def __init__(self):
         super().__init__()
 
@@ -154,6 +189,7 @@ class ExportsPlugin(idaapi.plugin_t):
         idaapi.register_action(self.action_desc)
         self.db_hook = DatabaseClosedHook()
         self.db_hook.hook()
+
         return idaapi.PLUGIN_KEEP
 
     def term(self):
@@ -168,4 +204,3 @@ class ExportsPlugin(idaapi.plugin_t):
 
 def PLUGIN_ENTRY():
     return ExportsPlugin()
-
