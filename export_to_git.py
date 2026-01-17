@@ -177,11 +177,11 @@ class ExportsPlugin(idaapi.plugin_t):
 
     def init(self):
         addon = idaapi.addon_info_t()
-        addon.id = "milanek.scripts_export"
+        addon.id = "milankovo.export_to_git"
         addon.name = "export scripts to git"
-        addon.producer = "Milanek"
+        addon.producer = "Milankovo"
         addon.url = "https://github.com/milankovo/ida_export_scripts"
-        addon.version = "9.0"
+        addon.version = "1.2.0"
         idaapi.register_addon(addon)
         self.action_desc = idaapi.action_desc_t(
             self.actname, "exports all scripts to git", export_scripts_handler_t()

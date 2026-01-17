@@ -2,14 +2,39 @@
     "IDAMetadataDescriptorVersion": 1,
     "plugin": {
         "name": "export_to_git",
+        "version": "1.2.0",
         "entryPoint": "export_to_git.py",
+        "description": "Exports IDA scripts to a Git repository",
+        "license": "MIT",
+        "urls": {
+            "repository": "https://github.com/milankovo/ida_export_scripts"
+        },
+        "authors": [
+            {
+                "name": "Milankovo",
+                "email": "ida_export_scripts@noreply.github.com"
+            }
+        ],
+        "idaVersions": ">=9.0",
+        "platforms": [
+            "windows-x86_64",
+            "linux-x86_64",
+            "macos-x86_64",
+            "macos-aarch64"
+        ],
         "categories": [
             "api-scripting-and-automation",
             "collaboration-and-productivity"
         ],
-        "description": "Exports IDA scripts to a Git repository",
-        "idaVersions": ">=7.0",
-        "logoPath": "logo.jpg",
-        "version": "1.1.0"
+        "keywords": [
+            "git",
+            "version-control",
+            "backup",
+            "scripts"
+        ],
+        "pythonDependencies": [
+            "GitPython"
+        ],
+        "logoPath": "logo.jpg"
     }
 }
